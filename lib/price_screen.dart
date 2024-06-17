@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'coin_data.dart';
 import 'package:flutter/cupertino.dart';
-import 'dart:io' show Platform;
+import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class PriceScreen extends StatefulWidget {
   @override
@@ -62,6 +63,14 @@ class _PriceScreenState extends State<PriceScreen> {
   bool isLoading = false;
 
   void getData() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      // No internet connection, show a message to the user
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'No internet connection. Please check your network settings.')));
+      return; // Stop further execution
+    }
     setState(() {
       isLoading = true;
     });
@@ -72,8 +81,14 @@ class _PriceScreenState extends State<PriceScreen> {
         isLoading = false;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to fetch data. Please try again later.')));
+      if (e is SocketException) {
+        SnackBar(
+            content:
+                Text('Failed to connect to server. Please try again later.'));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Failed to fetch data. Please try again later.')));
+      }
     }
   }
 
